@@ -105,25 +105,25 @@ def render():
         left, right = st.columns([1.2, 1])
         with left:
             true_label = st.session_state.get("true_label")
-            match_html = ""
+            badges = pill(f"Confidence: {confidence*100:.1f}%", "info")
             if true_label:
                 is_match = true_label == pred_class
                 match_html = pill("MATCH" if is_match else "MISMATCH", "success" if is_match else "danger")
+                badges += "&nbsp;" + pill(f"True: {true_label}", "info") + " " + match_html
 
-            st.markdown(
-                f"""
-                <div class="cad-result">
-                    <div style="font-size:0.85rem; color:#5B6B7F; font-weight:600;">PREDICTED DISEASE</div>
-                    <div class="big-label" style="color:{color};">{pred_class} — {CLASS_FULL_NAMES.get(pred_class, '')}</div>
-                    <div style="margin:0.6rem 0;">
-                        {pill(f"Confidence: {confidence*100:.1f}%", "info")}
-                        {" &nbsp; " if true_label else ""}
-                        {(pill(f"True: {true_label}", "info") + " " + match_html) if true_label else ""}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
+            # NOTE: built as ONE single-line string (no blank lines inside the
+            # <div>) before being handed to st.markdown - a multi-line f-string
+            # with a blank line in the middle gets split by Streamlit's
+            # Markdown parser and the stray closing tag shows up as literal
+            # "</div>" text instead of being rendered.
+            result_html = (
+                f'<div class="cad-result">'
+                f'<div style="font-size:0.85rem; color:#5B6B7F; font-weight:600;">PREDICTED DISEASE</div>'
+                f'<div class="big-label" style="color:{color};">{pred_class} — {CLASS_FULL_NAMES.get(pred_class, "")}</div>'
+                f'<div style="margin:0.6rem 0;">{badges}</div>'
+                f'</div>'
             )
+            st.markdown(result_html, unsafe_allow_html=True)
 
             # EDIT 2 (v2): the "CWT Scalogram (model input)" section was removed.
 
